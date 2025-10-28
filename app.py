@@ -7,37 +7,39 @@ import csv
 app = Flask(__name__)
 
 # ---------- DATABASE SETUP ----------
+DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
+
 def get_db_connection():
-    db_path = os.path.join(os.path.dirname(__file__), 'users.db')
-    conn = sqlite3.connect(db_path, timeout=10, check_same_thread=False)
+    conn = sqlite3.connect(DB_PATH, timeout=10, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            fullname TEXT NOT NULL,
-                            email TEXT NOT NULL,
-                            idnumber TEXT UNIQUE NOT NULL,
-                            role TEXT NOT NULL
-                        )''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fullname TEXT NOT NULL,
+                email TEXT NOT NULL,
+                idnumber TEXT UNIQUE NOT NULL,
+                role TEXT NOT NULL
+            )
+        ''')
         conn.commit()
 
-# ---------- CSV BACKUP FUNCTION ----------
+# ---------- CSV BACKUP ----------
+CSV_PATH = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
+
 def backup_csv():
-    db_path = os.path.join(os.path.dirname(__file__), 'users.db')
-    csv_path = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
-    
-    with sqlite3.connect(db_path) as conn:
+    with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, fullname, email, idnumber, role FROM users")
         rows = cursor.fetchall()
     
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+    with open(CSV_PATH, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(["id","fullname","email","idnumber","role"])
+        writer.writerow(["id", "fullname", "email", "idnumber", "role"])
         for r in rows:
             writer.writerow(r)
 
@@ -54,15 +56,15 @@ def submit():
     role = request.form.get('role', '').strip()
     agree = request.form.get('agree')
 
-    # ✅ Validate required fields
+    # Validate required fields
     if not all([fullname, email, idnumber, role, agree]):
         return "<h2>⚠️ Please fill out all fields and agree to the terms.</h2>"
 
-    # ✅ Validate ID number format ####-####
+    # Validate ID number format ####-####
     if not re.match(r'^\d{4}-\d{4}$', idnumber):
         return "<h2>⚠️ Invalid ID number format. Use ####-#### (e.g., 0222-0282).</h2>"
 
-    # ✅ Validate role
+    # Validate role
     if role not in ["Student", "Faculty"]:
         return "<h2>⚠️ Invalid role. Please select Student or Faculty.</h2>"
 
@@ -75,10 +77,10 @@ def submit():
             )
             conn.commit()
 
-        # ✅ Generate CSV backup on every successful signup
+        # Generate CSV backup
         backup_csv()
 
-        # ✅ Redirect to thank you page after successful registration
+        # Redirect to thank you page
         return redirect(url_for('thank_you'))
 
     except sqlite3.IntegrityError:
@@ -87,22 +89,22 @@ def submit():
     except sqlite3.OperationalError as e:
         return f"<h2>⚠️ Database error: {e}</h2>"
 
-# ---------- THANK YOU PAGE ----------
+# Thank you page
 @app.route('/thankyou')
 def thank_you():
     return render_template('thankyou.html')
 
-# ---------- SECURE CSV DOWNLOAD ROUTE ----------
+# Secure CSV download
 @app.route('/download_csv')
 def download_csv():
     token = request.args.get("token")
-    if token != os.environ.get("ADMIN_TOKEN"):  # Set this in Render environment variables
+    if token != os.environ.get("ADMIN_TOKEN"):  # Set in Render
         abort(403)
-    
-    csv_path = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
-    if not os.path.exists(csv_path):
+
+    if not os.path.exists(CSV_PATH):
         abort(404)
-    return send_file(csv_path, as_attachment=True)
+
+    return send_file(CSV_PATH, as_attachment=True)
 
 # ---------- RUN APP ----------
 if __name__ == '__main__':
