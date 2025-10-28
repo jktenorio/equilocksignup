@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file, abort
 import sqlite3
 import os
 import re
+import csv
 
 app = Flask(__name__)
 
@@ -24,10 +25,25 @@ def init_db():
                         )''')
         conn.commit()
 
+# ---------- CSV BACKUP FUNCTION ----------
+def backup_csv():
+    db_path = os.path.join(os.path.dirname(__file__), 'users.db')
+    csv_path = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
+    
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, fullname, email, idnumber, role FROM users")
+        rows = cursor.fetchall()
+    
+    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(["id","fullname","email","idnumber","role"])
+        for r in rows:
+            writer.writerow(r)
+
 # ---------- ROUTES ----------
 @app.route('/')
 def index():
-    # Render your signup HTML file (make sure it's saved as templates/signup.html)
     return render_template('signup.html')
 
 @app.route('/submit', methods=['POST'])
@@ -59,6 +75,9 @@ def submit():
             )
             conn.commit()
 
+        # ✅ Generate CSV backup on every successful signup
+        backup_csv()
+
         # ✅ Redirect to thank you page after successful registration
         return redirect(url_for('thank_you'))
 
@@ -72,6 +91,18 @@ def submit():
 @app.route('/thankyou')
 def thank_you():
     return render_template('thankyou.html')
+
+# ---------- SECURE CSV DOWNLOAD ROUTE ----------
+@app.route('/download_csv')
+def download_csv():
+    token = request.args.get("token")
+    if token != os.environ.get("ADMIN_TOKEN"):  # Set this in Render environment variables
+        abort(403)
+    
+    csv_path = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
+    if not os.path.exists(csv_path):
+        abort(404)
+    return send_file(csv_path, as_attachment=True)
 
 # ---------- RUN APP ----------
 if __name__ == '__main__':
