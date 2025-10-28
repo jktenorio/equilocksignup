@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EquiLock Sign Up</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #e6f0ff;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 90%;
+    max-width: 450px;
+  }
+  h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  input, select {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+  }
+  button {
+    background-color: #1b4dd8;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #163fad;
+  }
+  .privacy {
+    font-size: 14px;
+    color: #444;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    text-align: left;
+  }
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Sign Up</h2>
+
+  <form id="signupForm" action="/submit" method="POST">
+    <input type="text" name="fullname" placeholder="Full Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="text" name="idnumber" placeholder="ID Number (####-####)" required>
+
+    <select name="role" required>
+      <option value="" disabled selected>Select Role</option>
+      <option value="Student">Student</option>
+      <option value="Faculty">Faculty</option>
+    </select>
+
+    <p class="privacy">
+      By signing up, you agree to our Data Privacy Terms and Conditions.
+      Your information is used only for EquiLock equipment monitoring.
+    </p>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="agree" name="agree" value="yes">
+      <label for="agree">I have read and agree to the Data Privacy Terms and Conditions.</label>
+    </div>
+
+    <button type="submit">Sign Up</button>
+  </form>
+</div>
+
+</body>
+</html>
