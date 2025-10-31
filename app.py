@@ -31,17 +31,14 @@ def init_db():
 # ---------- CSV BACKUP ----------
 CSV_PATH = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
 
-def backup_csv():
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, fullname, email, idnumber, role FROM users")
-        rows = cursor.fetchall()
-    
-    with open(CSV_PATH, 'w', newline='', encoding='utf-8') as f:
+def append_to_csv(fullname, email, idnumber, role):
+    """Append new user to CSV, create file with header if it doesn't exist"""
+    file_exists = os.path.exists(CSV_PATH)
+    with open(CSV_PATH, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow(["id", "fullname", "email", "idnumber", "role"])
-        for r in rows:
-            writer.writerow(r)
+        if not file_exists:
+            writer.writerow(["fullname", "email", "idnumber", "role"])
+        writer.writerow([fullname, email, idnumber, role])
 
 # ---------- ROUTES ----------
 @app.route('/')
@@ -60,6 +57,10 @@ def submit():
     if not all([fullname, email, idnumber, role, agree]):
         return "<h2>⚠️ Please fill out all fields and agree to the terms.</h2>"
 
+    # Basic email format validation
+    if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+        return "<h2>⚠️ Invalid email format. Please enter a valid email.</h2>"
+
     # Validate ID number format ####-####
     if not re.match(r'^\d{4}-\d{4}$', idnumber):
         return "<h2>⚠️ Invalid ID number format. Use ####-#### (e.g., 0222-0282).</h2>"
@@ -77,10 +78,9 @@ def submit():
             )
             conn.commit()
 
-        # Generate CSV backup
-        backup_csv()
+        # Append new user to CSV permanently
+        append_to_csv(fullname, email, idnumber, role)
 
-        # Redirect to thank you page
         return redirect(url_for('thank_you'))
 
     except sqlite3.IntegrityError:
@@ -98,7 +98,7 @@ def thank_you():
 @app.route('/download_csv')
 def download_csv():
     token = request.args.get("token")
-    if token != os.environ.get("ADMIN_TOKEN"):  # Set in Render
+    if token != os.environ.get("ADMIN_TOKEN"):  # Set in environment variables
         abort(403)
 
     if not os.path.exists(CSV_PATH):
