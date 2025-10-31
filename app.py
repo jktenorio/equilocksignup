@@ -15,6 +15,10 @@ def get_db_connection():
     return conn
 
 def init_db():
+    """Create the users table if it doesn't exist"""
+    # Ensure folder exists
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute('''
@@ -28,11 +32,17 @@ def init_db():
         ''')
         conn.commit()
 
+# ⚡ Initialize database immediately when app starts
+init_db()
+
 # ---------- CSV BACKUP ----------
 CSV_PATH = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
 
 def append_to_csv(fullname, email, idnumber, role):
     """Append new user to CSV, create file with header if it doesn't exist"""
+    # Ensure folder exists
+    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+    
     file_exists = os.path.exists(CSV_PATH)
     with open(CSV_PATH, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
@@ -108,6 +118,5 @@ def download_csv():
 
 # ---------- RUN APP ----------
 if __name__ == '__main__':
-    init_db()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)

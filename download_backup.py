@@ -2,10 +2,10 @@ import requests
 import os
 
 # ---------------- CONFIGURATION ----------------
-# Your Flask app URL for downloading CSV
-RENDER_URL = "https://equilock-sign-up-form.onrender.com/download_csv"
+# URL to download CSV from Flask app
+RENDER_URL = "http://127.0.0.1:5000/download_csv"  # or your deployed URL
 
-# Admin token you set in environment variables
+# Admin token used in your environment
 TOKEN = "your-secret-token-here"  # Replace with your actual token
 
 # Save CSV in the same folder as this script
@@ -19,7 +19,10 @@ def download_csv():
         response = requests.get(url, timeout=10)
         response.raise_for_status()  # Raise error for HTTP issues
         
-        # Save CSV permanently (overwrites only when downloaded)
+        # Ensure folder exists
+        os.makedirs(os.path.dirname(LOCAL_CSV), exist_ok=True)
+        
+        # Save CSV permanently
         with open(LOCAL_CSV, "wb") as f:
             f.write(response.content)
         
