@@ -3,7 +3,7 @@ import os
 
 # ---------------- CONFIGURATION ----------------
 # URL of your deployed Flask app's CSV endpoint
-RENDER_URL = "https://equilocksignupform.onrender.com/download_csv"  # replace with your Render URL
+RENDER_URL = "https://equilock-sign-up-form.onrender.com/download_csv"  # replace with your Render URL
 
 # Admin token set in Render environment variables
 TOKEN = "equishanedavekevin"  # must match ADMIN_TOKEN on Render
