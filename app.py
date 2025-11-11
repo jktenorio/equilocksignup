@@ -6,16 +6,18 @@ import csv
 
 app = Flask(__name__)
 
-# ---------- DATABASE SETUP ----------
-DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
+# ---------- DATABASE & CSV PATHS ----------
+DB_PATH = os.path.abspath("users.db")
+CSV_PATH = os.path.abspath("users_backup.csv")
 
+# ---------- DATABASE FUNCTIONS ----------
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH, timeout=10, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    """Create users table if it doesn't exist"""
+    """Create the users table if it doesn't exist"""
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute('''
@@ -29,15 +31,15 @@ def init_db():
         ''')
         conn.commit()
 
-# ---------- CSV BACKUP ----------
-CSV_PATH = os.path.join(os.path.dirname(__file__), 'users_backup.csv')
+# Initialize database immediately when app starts
+init_db()
 
-def init_csv():
-    """Create CSV file with header if it doesn't exist"""
-    if not os.path.exists(CSV_PATH):
-        with open(CSV_PATH, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(["fullname", "email", "idnumber", "role"])
+# ---------- CSV FUNCTIONS ----------
+# Ensure CSV exists at startup
+if not os.path.exists(CSV_PATH):
+    with open(CSV_PATH, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(["fullname", "email", "idnumber", "role"])
 
 def append_to_csv(fullname, email, idnumber, role):
     """Append new user to CSV"""
@@ -61,15 +63,19 @@ def submit():
     role = request.form.get('role', '').strip()
     agree = request.form.get('agree')
 
+    # Validate required fields
     if not all([fullname, email, idnumber, role, agree]):
         return "<h2>⚠️ Please fill out all fields and agree to the terms.</h2>"
 
+    # Basic email format validation
     if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
         return "<h2>⚠️ Invalid email format. Please enter a valid email.</h2>"
 
+    # Validate ID number format ####-####
     if not re.match(r'^\d{4}-\d{4}$', idnumber):
         return "<h2>⚠️ Invalid ID number format. Use ####-#### (e.g., 0222-0282).</h2>"
 
+    # Validate role
     if role not in ["Student", "Faculty"]:
         return "<h2>⚠️ Invalid role. Please select Student or Faculty.</h2>"
 
@@ -82,11 +88,14 @@ def submit():
             )
             conn.commit()
 
+        # Append new user to CSV
         append_to_csv(fullname, email, idnumber, role)
+
         return redirect(url_for('thank_you'))
 
     except sqlite3.IntegrityError:
         return "<h2>⚠️ This ID number is already registered. Please use another one.</h2>"
+
     except sqlite3.OperationalError as e:
         return f"<h2>⚠️ Database error: {e}</h2>"
 
@@ -94,11 +103,11 @@ def submit():
 def thank_you():
     return render_template('thankyou.html')
 
+# ---------- SECURE CSV DOWNLOAD ----------
 @app.route('/download_csv')
 def download_csv():
     token = request.args.get("token")
-    ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "equishanedavekevin")  # fallback token
-    if token != ADMIN_TOKEN:
+    if token != os.environ.get("ADMIN_TOKEN"):  # Must match Render environment variable
         abort(403)
 
     if not os.path.exists(CSV_PATH):
@@ -106,11 +115,8 @@ def download_csv():
 
     return send_file(CSV_PATH, as_attachment=True)
 
-# ---------- INITIALIZE DB AND CSV ON STARTUP ----------
-init_db()
-init_csv()
-
 # ---------- RUN APP ----------
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+

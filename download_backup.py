@@ -3,10 +3,10 @@ import os
 
 # ---------------- CONFIGURATION ----------------
 # URL of your deployed Flask app's CSV endpoint
-RENDER_URL = "https://your-app.onrender.com/download_csv"  # replace with your Render URL
+RENDER_URL = "https://equilocksignupform.onrender.com/download_csv"  # replace with your Render URL
 
 # Admin token set in Render environment variables
-TOKEN = "your-secret-token-here"  # must match ADMIN_TOKEN on Render
+TOKEN = "equishanedavekevin"  # must match ADMIN_TOKEN on Render
 
 # Path to save CSV locally
 LOCAL_CSV = os.path.abspath("users_backup.csv")
