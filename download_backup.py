@@ -9,7 +9,7 @@ RENDER_URL = "https://equilock-sign-up-form.onrender.com/download_csv"  # replac
 TOKEN = "equishanedavekevin"  # must match ADMIN_TOKEN on Render
 
 # Path to save CSV locally
-LOCAL_CSV = os.path.abspath("users_backup.csv")
+LOCAL_CSV ="/home/equilock/Documents/SignUp/users_backup.csv"
 
 # ---------------- DOWNLOAD FUNCTION ----------------
 def download_csv():
