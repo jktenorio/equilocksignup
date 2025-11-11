@@ -6,7 +6,7 @@ import os
 RENDER_URL = "https://equilock-sign-up-form.onrender.com/download_csv"
 
 # Admin token you set in environment variables
-TOKEN = "your-secret-token-here"  # Replace with your actual token
+TOKEN = "equishanedavekevin"  # Replace with your actual token
 
 # Save CSV in the same folder as this script
 LOCAL_CSV = os.path.join(os.path.dirname(__file__), "users_backup.csv")
