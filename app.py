@@ -50,6 +50,25 @@ def append_to_csv(fullname, email, idnumber, role):
             writer.writerow(["fullname", "email", "idnumber", "role"])
         writer.writerow([fullname, email, idnumber, role])
 
+def sync_csv_to_sqlite():
+    """Ensure CSV data is inserted permanently into SQLite."""
+    if not os.path.exists(CSV_PATH):
+        return
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        with open(CSV_PATH, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO users (fullname, email, idnumber, role)
+                    VALUES (?, ?, ?, ?)
+                """, (row["fullname"], row["email"], row["idnumber"], row["role"]))
+        conn.commit()
+
+# Sync data immediately when kiosk app starts
+sync_csv_to_sqlite()
+
 # ---------- ROUTES ----------
 @app.route('/')
 def index():
@@ -119,4 +138,3 @@ def download_csv():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
-
