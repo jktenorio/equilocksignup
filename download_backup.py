@@ -8,7 +8,7 @@ RENDER_URL = "https://equilock-sign-up-form.onrender.com/download_csv"
 TOKEN = "equishanedavekevin"  # must match ADMIN_TOKEN on Render
 
 LOCAL_CSV = "/home/equilock/Documents/SignUp/equilocksignup/users_backup.csv"
-LOCAL_DB = "/home/equilock/Documents/SignUp/equilocksignup/users.db"  # <-- make sure path is correct
+LOCAL_DB = "/home/equilock/Documents/backend/users.db"  # <-- make sure path is correct
 
 
 # ---------------- SYNC CSV INTO SQLITE ----------------
